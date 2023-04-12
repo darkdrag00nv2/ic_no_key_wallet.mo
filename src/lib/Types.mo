@@ -1,6 +1,6 @@
 module {
     public type CreateAddressResponse = {
-        public_key: Blob;
+        address: [Nat8];
     };
 
     public type Result<X> = {

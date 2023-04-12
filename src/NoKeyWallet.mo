@@ -16,8 +16,7 @@ actor NoKeyWallet {
   stable let lib = NoKeyWalletLib.init(evm_util, ic_management);
 
   public shared (msg) func createAddress() : async Result<CreateAddressResponse> {
-    let caller = Principal.toBlob(msg.caller);
-    return await NoKeyWalletLib.createAddress(lib, caller);
+    return await NoKeyWalletLib.createAddress(lib, msg.caller);
   };
 
   public query func healthcheck() : async Bool { true };
