@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "canisters": {
+    "no_key_wallet_mo_backend": {
+      "type": "motoko",
+      "main": "src/no_key_wallet_mo_backend/main.mo"
+    },
+    "no_key_wallet_mo_frontend": {
+      "type": "assets",
+      "source": [
+        "src/no_key_wallet_mo_frontend/assets"
+      ],
+      "dependencies": [
+        "no_key_wallet_mo_backend"
+      ]
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "",
+      "args": ""
+    }
+  },
+  "output_env_file": ".env"
+}
