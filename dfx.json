@@ -1,9 +1,9 @@
 {
   "version": 1,
   "canisters": {
-    "no_key_wallet_mo_bin": {
+    "no_key_wallet": {
       "type": "motoko",
-      "main": "src/bin/main.mo"
+      "main": "src/NoKeyWallet.mo"
     }
   },
   "dfx": "0.13.1",
