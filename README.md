@@ -1,3 +1,3 @@
-# no_key_wallet_mo
+# ic_no_key_wallet
 
 TODO
