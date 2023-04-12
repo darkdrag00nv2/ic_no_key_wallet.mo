@@ -1,25 +1,16 @@
 {
   "version": 1,
   "canisters": {
-    "no_key_wallet_mo_backend": {
+    "no_key_wallet_mo_bin": {
       "type": "motoko",
-      "main": "src/no_key_wallet_mo_backend/main.mo"
-    },
-    "no_key_wallet_mo_frontend": {
-      "type": "assets",
-      "source": [
-        "src/no_key_wallet_mo_frontend/assets"
-      ],
-      "dependencies": [
-        "no_key_wallet_mo_backend"
-      ]
+      "main": "src/bin/main.mo"
     }
   },
+  "dfx": "0.13.1",
   "defaults": {
     "build": {
-      "packtool": "",
+      "packtool": "vessel sources",
       "args": ""
     }
-  },
-  "output_env_file": ".env"
+  }
 }
