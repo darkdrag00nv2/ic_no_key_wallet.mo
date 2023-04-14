@@ -19,5 +19,9 @@ actor NoKeyWallet {
     return await NoKeyWalletLib.createAddress(lib, msg.caller);
   };
 
+  public shared (msg) func signTransaction(raw_txn : [Nat8], chain_id : Nat64, save_history : Bool) : async Result<Nat> {
+    return await NoKeyWalletLib.signTransaction(lib, raw_txn, chain_id, msg.caller, save_history);
+  };
+
   public query func healthcheck() : async Bool { true };
 };

@@ -27,4 +27,8 @@ module {
         let userData = initUserData(pub_key);
         ignore Map.put(s.users, phash, p, userData);
     };
+
+    public func getUserData(s: State, p: Principal) : ?UserData {
+        return Map.get(s.users, phash, p);
+    };
 };
