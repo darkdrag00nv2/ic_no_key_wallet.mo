@@ -16,10 +16,17 @@ actor NoKeyWallet {
   let ic_management : IcManagement = actor ("aaaaa-aa");
   stable let lib = NoKeyWalletLib.init(evm_util, ic_management);
 
+  /// Create an address/key for the caller principal.
+  ///
+  /// The address is saved in the user state and can be used later to sign a transaction.
   public shared (msg) func createAddress() : async Result<CreateAddressResponse> {
     return await NoKeyWalletLib.createAddress(lib, msg.caller);
   };
 
+  /// Sign the provided raw transaction.
+  ///
+  /// The transaction will be signed for the provided chain_id.
+  /// It will saved in the transaction history for the user if save_history is true.
   public shared (msg) func signTransaction(
     raw_txn : [Nat8],
     chain_id : Nat64,

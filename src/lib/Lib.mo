@@ -38,6 +38,9 @@ module {
         state = State.initState();
     };
 
+    /// Create an address for the provided principal.
+    ///
+    /// The address is saved in the user state and can be used later to sign a transaction.
     public func createAddress(
         lib : NoKeyWalletLib,
         caller_principal : Principal,
@@ -63,6 +66,10 @@ module {
         };
     };
 
+    /// Sign the provided raw transaction.
+    ///
+    /// The transaction will be signed for the provided chain_id.
+    /// It will saved in the transaction history for the user if save_history is true.
     public func signTransaction(
         lib : NoKeyWalletLib,
         raw_txn : [Nat8],
@@ -97,7 +104,14 @@ module {
                                 };
                             });
 
-                            let signed_txn_serialized = await signTransactionWithSignature(lib, txn, signature);
+                            let signed_txn_serialized = await signTransactionWithSignature(
+                                lib,
+                                txn,
+                                chain_id,
+                                message_hash,
+                                signature,
+                                userData.public_key,
+                            );
                             switch (signed_txn_serialized) {
                                 case (#Err(msg)) {
                                     return #Err(msg);
@@ -133,12 +147,54 @@ module {
     private func signTransactionWithSignature(
         lib : NoKeyWalletLib,
         txn : Transaction,
+        chain_id : Nat64,
+        msg_hash : [Nat8],
         signature : Blob,
+        public_key : Blob,
     ) : async Result<[Nat8]> {
         let sig_bytes = Blob.toArray(signature);
-        let r = Array.subArray(sig_bytes, 0, 4);
+        let public_key_bytes = Blob.toArray(public_key);
+
+        // We don't validate msg_hash size since it is already validated by the caller.
+        if (sig_bytes.size() != 64) {
+            return #Err("Invalid signature returned from sign_with_ecdsa");
+        } else if (public_key_bytes.size() != 33) {
+            return #Err("Invalid public key when signing transaction");
+        };
+
+        switch (txn) {
+            case (#Legacy(txn_legacy)) {
+                let r = Array.subArray(sig_bytes, 0, 4);
+                let s = Array.subArray(sig_bytes, 4, 4);
+                let recovery_id = await getRecoveryId(lib, msg_hash, sig_bytes, public_key_bytes);
+                switch (recovery_id) {
+                    case (#Err(msg)) {
+                        return #Err(msg);
+                    };
+                    case (#Ok(recovery_id)) {
+                        let v = chain_id * 2 + 35 + Nat64.fromNat(Nat8.toNat(recovery_id));
+                    };
+                };
+            };
+            case (#EIP1559(txn_1559)) {};
+            case (#EIP2930(txn_2930)) {};
+        };
 
         #Err("TODO");
+    };
+
+    private func getRecoveryId(
+        lib : NoKeyWalletLib,
+        msg_hash : [Nat8],
+        sig_bytes : [Nat8],
+        public_key_bytes : [Nat8],
+    ) : async Result<Nat8> {
+
+        return #Err("TODO");
+    };
+
+    private func cloneTransactionWithSignatureInfo() {
+
     };
 
     private func getNonceFromTransaction(txn : Transaction) : [Nat8] {
