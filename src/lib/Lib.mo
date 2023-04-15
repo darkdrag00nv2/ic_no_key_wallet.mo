@@ -11,6 +11,7 @@ import State "State";
 import Nat64 "mo:base/Nat64";
 import Buffer "mo:base/Buffer";
 import Nat8 "mo:base/Nat8";
+import Cycles "mo:base/ExperimentalCycles";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
@@ -33,7 +34,10 @@ module {
         state = State.initState();
     };
 
-    public func createAddress(lib : NoKeyWalletLib, caller_principal : Principal) : async Result<CreateAddressResponse> {
+    public func createAddress(
+        lib : NoKeyWalletLib,
+        caller_principal : Principal,
+    ) : async Result<CreateAddressResponse> {
         try {
             // TODO: Use key name based on the environment.
             let { public_key } = await lib.icManagement.ecdsa_public_key({
@@ -55,7 +59,13 @@ module {
         };
     };
 
-    public func signTransaction(lib : NoKeyWalletLib, raw_txn : [Nat8], chain_id : Nat64, caller_principal : Principal, save_history : Bool) : async Result<Nat> {
+    public func signTransaction(
+        lib : NoKeyWalletLib,
+        raw_txn : [Nat8],
+        chain_id : Nat64,
+        caller_principal : Principal,
+        save_history : Bool,
+    ) : async Result<Nat> {
         switch (State.getUserData(lib.state, caller_principal)) {
             case (null) {
                 return #Err("The user does not exist");
@@ -66,71 +76,40 @@ module {
                 switch (txn) {
                     case (#Err(msg)) { return #Err(msg) };
                     case (#Ok(txn)) {
+                        let message_hash = await lib.evmUtil.keccak256(raw_txn);
+                        if (message_hash.size() != 32) {
+                            return #Err("unexpected length of message hash. Aborting!");
+                        };
 
-                        #Err("TODO");
+                        try {
+                            // TODO: Use cycle amount and key name based on the environment.
+                            Cycles.add(10_000_000_000);
+                            let { signature } = await lib.icManagement.sign_with_ecdsa({
+                                message_hash = Blob.fromArray(message_hash);
+                                derivation_path = [Principal.toBlob(caller_principal)];
+                                key_id = {
+                                    curve = #secp256k1;
+                                    name = "dfx_test_key";
+                                };
+                            });
+
+                            let signed_txn_serialized = await signTransactionWithSignature(lib, txn, signature);
+                        } catch (err) {
+                            return #Err(Error.message(err));
+                        };
+
+                        #Ok(0);
                     };
                 };
             };
         };
     };
 
-    private func getMessageToSign(txn : Transaction) {
-        switch (txn) {
-            case (#Legacy(txn_legacy)) {
-                let buf = Buffer.Buffer<Nat8>(58);
-                appendAllToBuffer(buf, txn_legacy.nonce);
-                appendAllToBuffer(buf, txn_legacy.gas_price);
-                appendAllToBuffer(buf, txn_legacy.gas_limit);
-                appendAllToBuffer(buf, txn_legacy.to);
-                appendAllToBuffer(buf, txn_legacy.value);
-                appendAllToBuffer(buf, txn_legacy.data);
-                appendAllToBuffer(buf, nat64_to_nat8(txn_legacy.chain_id));
-            };
-            case (#EIP2930(txn_2930)) {
-                let buf = Buffer.Buffer<Nat8>(58);
-                appendAllToBuffer(buf, nat64_to_nat8(txn_2930.chain_id));
-                appendAllToBuffer(buf, txn_2930.nonce);
-                appendAllToBuffer(buf, txn_2930.gas_price);
-                appendAllToBuffer(buf, txn_2930.gas_limit);
-                appendAllToBuffer(buf, txn_2930.to);
-                appendAllToBuffer(buf, txn_2930.value);
-                appendAllToBuffer(buf, txn_2930.data);
-            };
-            case (#EIP1559(txn_1559)) {
-                let buf = Buffer.Buffer<Nat8>(58);
-                appendAllToBuffer(buf, nat64_to_nat8(txn_1559.chain_id));
-                appendAllToBuffer(buf, txn_1559.nonce);
-                appendAllToBuffer(buf, txn_1559.max_priority_fee_per_gas);
-                appendAllToBuffer(buf, txn_1559.max_fee_per_gas);
-                appendAllToBuffer(buf, txn_1559.gas_limit);
-                appendAllToBuffer(buf, txn_1559.to);
-                appendAllToBuffer(buf, txn_1559.value);
-                appendAllToBuffer(buf, txn_1559.data);
-            };
-        };
-    };
-
-    private func appendAllToBuffer<X>(buf : Buffer.Buffer<X>, values : [X]) {
-        var i = 0;
-        while (i < values.size()) {
-            buf.add(values[i]);
-            i += 1;
-        };
-    };
-
-    public func nat64_to_nat8(n : Nat64) : [Nat8] {
-        let buffer = Buffer.Buffer<Nat8>(8);
-
-        var n_var = n;
-        var i = 0;
-        while (i < 8) {
-            let val : Nat8 = Nat8.fromNat(Nat64.toNat(n_var % 256));
-            buffer.add(val);
-            n_var /= 256;
-            i -= 1;
-        };
-
-        Buffer.reverse(buffer);
-        return Buffer.toArray(buffer);
+    private func signTransactionWithSignature(
+        lib : NoKeyWalletLib,
+        txn : Transaction,
+        signature : Blob,
+    ) : async Result<Nat> {
+        #Err("TODO");
     };
 };
