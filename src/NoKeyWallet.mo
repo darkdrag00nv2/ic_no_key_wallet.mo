@@ -8,6 +8,7 @@ actor NoKeyWallet {
   type EvmUtil = EvmUtil.EvmUtil;
   type IcManagement = IcManagement.IcManagement;
   type CreateAddressResponse = Types.CreateAddressResponse;
+  type SignTransactionResponse = Types.SignTransactionResponse;
   type Result<X> = Types.Result<X>;
 
   // TODO: https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
@@ -19,7 +20,11 @@ actor NoKeyWallet {
     return await NoKeyWalletLib.createAddress(lib, msg.caller);
   };
 
-  public shared (msg) func signTransaction(raw_txn : [Nat8], chain_id : Nat64, save_history : Bool) : async Result<Nat> {
+  public shared (msg) func signTransaction(
+    raw_txn : [Nat8],
+    chain_id : Nat64,
+    save_history : Bool,
+  ) : async Result<SignTransactionResponse> {
     return await NoKeyWalletLib.signTransaction(lib, raw_txn, chain_id, msg.caller, save_history);
   };
 

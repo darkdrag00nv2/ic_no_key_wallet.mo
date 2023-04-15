@@ -12,15 +12,19 @@ import Nat64 "mo:base/Nat64";
 import Buffer "mo:base/Buffer";
 import Nat8 "mo:base/Nat8";
 import Cycles "mo:base/ExperimentalCycles";
+import Array "mo:base/Array";
+import { now } = "mo:base/Time";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
     type IcManagement = IcManagement.IcManagement;
     type CreateAddressResponse = Types.CreateAddressResponse;
+    type SignTransactionResponse = Types.SignTransactionResponse;
     type Result<X> = Types.Result<X>;
     type State = State.State;
     type UserData = State.UserData;
     type Transaction = EvmUtil.Transaction;
+    type TransactionData = State.TransactionData;
 
     public type NoKeyWalletLib = {
         evmUtil : EvmUtil;
@@ -65,7 +69,7 @@ module {
         chain_id : Nat64,
         caller_principal : Principal,
         save_history : Bool,
-    ) : async Result<Nat> {
+    ) : async Result<SignTransactionResponse> {
         switch (State.getUserData(lib.state, caller_principal)) {
             case (null) {
                 return #Err("The user does not exist");
@@ -94,11 +98,32 @@ module {
                             });
 
                             let signed_txn_serialized = await signTransactionWithSignature(lib, txn, signature);
+                            switch (signed_txn_serialized) {
+                                case (#Err(msg)) {
+                                    return #Err(msg);
+                                };
+                                case (#Ok(signed_txn_serialized)) {
+                                    let txn_data : TransactionData = {
+                                        data = signed_txn_serialized;
+                                        timestamp = now();
+                                    };
+
+                                    State.addTransactionForUser(
+                                        lib.state,
+                                        caller_principal,
+                                        txn_data,
+                                        chain_id,
+                                        getNonceFromTransaction(txn),
+                                    );
+
+                                    return #Ok({
+                                        signed_txn = signed_txn_serialized;
+                                    });
+                                };
+                            };
                         } catch (err) {
                             return #Err(Error.message(err));
                         };
-
-                        #Ok(0);
                     };
                 };
             };
@@ -109,7 +134,24 @@ module {
         lib : NoKeyWalletLib,
         txn : Transaction,
         signature : Blob,
-    ) : async Result<Nat> {
+    ) : async Result<[Nat8]> {
+        let sig_bytes = Blob.toArray(signature);
+        let r = Array.subArray(sig_bytes, 0, 4);
+
         #Err("TODO");
+    };
+
+    private func getNonceFromTransaction(txn : Transaction) : [Nat8] {
+        switch (txn) {
+            case (#Legacy(txn_legacy)) {
+                return txn_legacy.nonce;
+            };
+            case (#EIP1559(txn_1559)) {
+                return txn_1559.nonce;
+            };
+            case (#EIP2930(txn_2930)) {
+                return txn_2930.nonce;
+            };
+        };
     };
 };
