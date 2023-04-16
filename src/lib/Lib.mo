@@ -166,34 +166,49 @@ module {
             return #Err("Invalid public key when signing transaction");
         };
 
-        switch (txn) {
-            case (#Legacy(txn_legacy)) {
-                let r = Array.subArray(sig_bytes, 0, 4);
-                let s = Array.subArray(sig_bytes, 4, 4);
-                let recovery_id = await getRecoveryId(lib, msg_hash, sig_bytes, public_key_bytes);
-                switch (recovery_id) {
-                    case (#Err(msg)) {
-                        return #Err(msg);
+        let r = Array.subArray(sig_bytes, 0, 4);
+        let s = Array.subArray(sig_bytes, 4, 4);
+        let recovery_id = await getRecoveryId(lib, msg_hash, sig_bytes, public_key_bytes);
+
+        let v : Nat64 = switch (recovery_id) {
+            case (#Err(msg)) {
+                return #Err(msg);
+            };
+            case (#Ok(recovery_id)) {
+                switch (txn) {
+                    case (#Legacy(txn_legacy)) {
+                        chain_id * 2 + 35 + Nat64.fromNat(Nat8.toNat(recovery_id));
                     };
-                    case (#Ok(recovery_id)) {
-                        let v = chain_id * 2 + 35 + Nat64.fromNat(Nat8.toNat(recovery_id));
-                        let signature_info : Signature = {
-                            r = r;
-                            s = s;
-                            v = v;
-                            hash = msg_hash;
-                            from = null;
-                        };
-                        let signed_txn = cloneTransactionWithSignatureInfo(txn, signature_info);
-                        // let signed_txn_encoded = await lib.evmUtil.rlp_encode(signed_txn);
+                    case (#EIP1559(txn_1559)) {
+                        if (recovery_id == 0) 0 else 1;
+                    };
+                    case (#EIP2930(txn_2930)) {
+                        if (recovery_id == 0) 0 else 1;
                     };
                 };
             };
-            case (#EIP1559(txn_1559)) {};
-            case (#EIP2930(txn_2930)) {};
         };
 
-        #Err("TODO");
+        let signature_info : Signature = {
+            r = r;
+            s = s;
+            v = v;
+            hash = msg_hash;
+            from = null;
+        };
+        let signed_txn = cloneTransactionWithSignatureInfo(txn, signature_info);
+
+        // TODO: create_transaction does not support encoding signature information.
+        // https://github.com/icopen/evm_utils_ic/issues/3
+        let signed_txn_encoded = await lib.evmUtil.create_transaction(signed_txn);
+        switch (signed_txn_encoded) {
+            case (#Err(msg)) {
+                return #Err(msg);
+            };
+            case (#Ok((signed_txn_encoded, _))) {
+                return #Ok(signed_txn_encoded);
+            };
+        };
     };
 
     private func getRecoveryId(
