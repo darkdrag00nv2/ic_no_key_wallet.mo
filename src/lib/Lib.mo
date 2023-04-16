@@ -285,14 +285,15 @@ module {
         };
     };
 
+    /// Get the transaction history of the principal for the provided chain_id.
     public func getCallerHistory(
         lib : NoKeyWalletLib,
         chain_id : Nat64,
         caller_principal : Principal,
-    ) : async Result<?UserResponse> {
+    ) : async Result<UserResponse> {
         switch (State.getUserData(lib.state, caller_principal)) {
             case (null) {
-                return #Ok(null);
+                return #Err("User does not exist");
             };
             case (?userData) {
                 let address_or_error = await lib.evmUtil.pub_to_address(Blob.toArray(userData.public_key));
@@ -312,7 +313,7 @@ module {
                         };
 
                         return #Ok(
-                            ?{
+                            {
                                 address = address;
                                 transactions = transaction_data;
                             }
@@ -320,6 +321,23 @@ module {
                     };
                     case (#Err(msg)) { return #Err(msg) };
                 };
+            };
+        };
+    };
+
+    /// Clear the transaction history of the principal for the provided chain_id.
+    public func clearCallerHistory(
+        lib : NoKeyWalletLib,
+        chain_id : Nat64,
+        caller_principal : Principal,
+    ) : async Result<()> {
+        switch (State.getUserData(lib.state, caller_principal)) {
+            case (null) {
+                return #Err("User does not exist");
+            };
+            case (?userData) {
+                Map.delete(userData.transactions, n64hash, chain_id);
+                return #Ok(());
             };
         };
     };

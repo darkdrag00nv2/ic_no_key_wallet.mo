@@ -37,9 +37,14 @@ actor NoKeyWallet {
     return await NoKeyWalletLib.signTransaction(lib, raw_txn, chain_id, msg.caller, save_history);
   };
 
-  /// Get the transaction history of the caller.
-  public shared (msg) func getCallerHistory(chain_id : Nat64) : async Result<?UserResponse> {
+  /// Get the transaction history of the caller for the provided chain_id.
+  public shared (msg) func getCallerHistory(chain_id : Nat64) : async Result<UserResponse> {
     return await NoKeyWalletLib.getCallerHistory(lib, chain_id, msg.caller);
+  };
+
+  /// Clear the transaction history of the caller for the provided chain_id.
+  public shared (msg) func clearCallerHistory(chain_id : Nat64) : async Result<()> {
+    return await NoKeyWalletLib.clearCallerHistory(lib, chain_id, msg.caller);
   };
 
   public query func healthcheck() : async Bool { true };
