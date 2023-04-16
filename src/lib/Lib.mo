@@ -14,6 +14,8 @@ import Nat8 "mo:base/Nat8";
 import Cycles "mo:base/ExperimentalCycles";
 import Array "mo:base/Array";
 import { now } = "mo:base/Time";
+import Map "mo:stable_hash_map/Map/Map";
+import StableBuffer "mo:stable_buffer/StableBuffer";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
@@ -21,6 +23,7 @@ module {
 
     type CreateAddressResponse = Types.CreateAddressResponse;
     type SignTransactionResponse = Types.SignTransactionResponse;
+    type UserResponse = Types.UserResponse;
     type Result<X> = Types.Result<X>;
 
     type State = State.State;
@@ -29,6 +32,9 @@ module {
 
     type Transaction = EvmUtil.Transaction;
     type Signature = EvmUtil.Signature;
+
+    type Map<K, V> = Map.Map<K, V>;
+    let { n64hash } = Map;
 
     public type NoKeyWalletLib = {
         evmUtil : EvmUtil;
@@ -275,6 +281,45 @@ module {
             };
             case (#EIP2930(txn_2930)) {
                 return txn_2930.nonce;
+            };
+        };
+    };
+
+    public func getCallerHistory(
+        lib : NoKeyWalletLib,
+        chain_id : Nat64,
+        caller_principal : Principal,
+    ) : async Result<?UserResponse> {
+        switch (State.getUserData(lib.state, caller_principal)) {
+            case (null) {
+                return #Ok(null);
+            };
+            case (?userData) {
+                let address_or_error = await lib.evmUtil.pub_to_address(Blob.toArray(userData.public_key));
+                switch (address_or_error) {
+                    case (#Ok(address)) {
+                        let txn_chain_data = Map.get(userData.transactions, n64hash, chain_id);
+                        let transaction_data : ?Types.TransactionData = switch (txn_chain_data) {
+                            case (null) {
+                                null;
+                            };
+                            case (?txn_chain_data) {
+                                ?{
+                                    last_nonce = txn_chain_data.last_nonce;
+                                    transactions = StableBuffer.toArray(txn_chain_data.transactions);
+                                };
+                            };
+                        };
+
+                        return #Ok(
+                            ?{
+                                address = address;
+                                transactions = transaction_data;
+                            }
+                        );
+                    };
+                    case (#Err(msg)) { return #Err(msg) };
+                };
             };
         };
     };

@@ -3,12 +3,14 @@ import IcManagement "lib/IcManagement";
 import NoKeyWalletLib "lib/Lib";
 import Types "lib/Types";
 import Principal "mo:base/Principal";
+import Nat64 "mo:base/Nat64";
 
 actor NoKeyWallet {
   type EvmUtil = EvmUtil.EvmUtil;
   type IcManagement = IcManagement.IcManagement;
   type CreateAddressResponse = Types.CreateAddressResponse;
   type SignTransactionResponse = Types.SignTransactionResponse;
+  type UserResponse = Types.UserResponse;
   type Result<X> = Types.Result<X>;
 
   // TODO: https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
@@ -33,6 +35,11 @@ actor NoKeyWallet {
     save_history : Bool,
   ) : async Result<SignTransactionResponse> {
     return await NoKeyWalletLib.signTransaction(lib, raw_txn, chain_id, msg.caller, save_history);
+  };
+
+  /// Get the transaction history of the caller.
+  public shared (msg) func getCallerHistory(chain_id : Nat64) : async Result<?UserResponse> {
+    return await NoKeyWalletLib.getCallerHistory(lib, chain_id, msg.caller);
   };
 
   public query func healthcheck() : async Bool { true };

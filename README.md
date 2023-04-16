@@ -4,7 +4,9 @@ A stable class exposing wallet funtionalities for EVM based chains.
 
 ### Features
 - [x] Creating Address
-- [ ] Create Transaction
 - [ ] Sign Transaction
-- [ ] Retrieve History
+- [x] Retrieve History
 - [ ] Clear History
+- [ ] Deploy EVM Transaction
+- [ ] Transfer ERC 20
+- [ ] E2E Tests
