@@ -18,13 +18,17 @@ import { now } = "mo:base/Time";
 module {
     type EvmUtil = EvmUtil.EvmUtil;
     type IcManagement = IcManagement.IcManagement;
+
     type CreateAddressResponse = Types.CreateAddressResponse;
     type SignTransactionResponse = Types.SignTransactionResponse;
     type Result<X> = Types.Result<X>;
+
     type State = State.State;
     type UserData = State.UserData;
-    type Transaction = EvmUtil.Transaction;
     type TransactionData = State.TransactionData;
+
+    type Transaction = EvmUtil.Transaction;
+    type Signature = EvmUtil.Signature;
 
     public type NoKeyWalletLib = {
         evmUtil : EvmUtil;
@@ -173,6 +177,15 @@ module {
                     };
                     case (#Ok(recovery_id)) {
                         let v = chain_id * 2 + 35 + Nat64.fromNat(Nat8.toNat(recovery_id));
+                        let signature_info : Signature = {
+                            r = r;
+                            s = s;
+                            v = v;
+                            hash = msg_hash;
+                            from = null;
+                        };
+                        let signed_txn = cloneTransactionWithSignatureInfo(txn, signature_info);
+                        // let signed_txn_encoded = await lib.evmUtil.rlp_encode(signed_txn);
                     };
                 };
             };
@@ -193,8 +206,48 @@ module {
         return #Err("TODO");
     };
 
-    private func cloneTransactionWithSignatureInfo() {
-
+    private func cloneTransactionWithSignatureInfo(txn : Transaction, sign : Signature) : Transaction {
+        switch (txn) {
+            case (#Legacy(txn_legacy)) {
+                return #Legacy({
+                    chain_id = txn_legacy.chain_id;
+                    data = txn_legacy.data;
+                    gas_price = txn_legacy.gas_price;
+                    gas_limit = txn_legacy.gas_limit;
+                    sign = ?sign;
+                    to = txn_legacy.to;
+                    value = txn_legacy.value;
+                    nonce = txn_legacy.nonce;
+                });
+            };
+            case (#EIP1559(txn_1559)) {
+                return #EIP1559({
+                    access_list = txn_1559.access_list;
+                    chain_id = txn_1559.chain_id;
+                    data = txn_1559.data;
+                    max_fee_per_gas = txn_1559.max_fee_per_gas;
+                    max_priority_fee_per_gas = txn_1559.max_priority_fee_per_gas;
+                    gas_limit = txn_1559.gas_limit;
+                    sign = ?sign;
+                    to = txn_1559.to;
+                    value = txn_1559.value;
+                    nonce = txn_1559.nonce;
+                });
+            };
+            case (#EIP2930(txn_2930)) {
+                return #EIP2930({
+                    access_list = txn_2930.access_list;
+                    chain_id = txn_2930.chain_id;
+                    data = txn_2930.data;
+                    gas_limit = txn_2930.gas_limit;
+                    gas_price = txn_2930.gas_price;
+                    sign = ?sign;
+                    to = txn_2930.to;
+                    value = txn_2930.value;
+                    nonce = txn_2930.nonce;
+                });
+            };
+        };
     };
 
     private func getNonceFromTransaction(txn : Transaction) : [Nat8] {
