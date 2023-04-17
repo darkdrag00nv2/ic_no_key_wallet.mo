@@ -23,6 +23,7 @@ module {
 
     type CreateAddressResponse = Types.CreateAddressResponse;
     type SignTransactionResponse = Types.SignTransactionResponse;
+    type DeployContractResponse = Types.DeployContractResponse;
     type UserResponse = Types.UserResponse;
     type Result<X> = Types.Result<X>;
 
@@ -340,5 +341,79 @@ module {
                 return #Ok(());
             };
         };
+    };
+
+    public func deployEvmContract(
+        lib : NoKeyWalletLib,
+        caller_principal : Principal,
+        bytecode : [Nat8],
+        chain_id : Nat64,
+        max_priority_fee_per_gas : Nat64,
+        gas_limit : Nat64,
+        max_fee_per_gas : Nat64,
+    ) : async Result<DeployContractResponse> {
+        switch (State.getUserData(lib.state, caller_principal)) {
+            case (null) {
+                return #Err("User does not exist");
+            };
+            case (?userData) {
+                let txn_chain_data = Map.get(userData.transactions, n64hash, chain_id);
+                let nonce : Nat64 = switch (txn_chain_data) {
+                    case (null) {
+                        0;
+                    };
+                    case (?txn_chain_data) {
+                        nat8ToNat64(txn_chain_data.last_nonce) + 1;
+                    };
+                };
+
+                let txn : Transaction = #EIP1559({
+                    access_list = [];
+                    chain_id = chain_id;
+                    data = bytecode;
+                    max_fee_per_gas = nat64ToNat8(max_fee_per_gas);
+                    max_priority_fee_per_gas = nat64ToNat8(max_priority_fee_per_gas);
+                    gas_limit = nat64ToNat8(gas_limit);
+                    sign = null;
+                    to = nat64ToNat8(0);
+                    value = nat64ToNat8(0);
+                    nonce = nat64ToNat8(nonce);
+                });
+
+                let txn_encoded = await lib.evmUtil.create_transaction(txn);
+                switch (txn_encoded) {
+                    case (#Err(msg)) {
+                        return #Err(msg);
+                    };
+                    case (#Ok(txn_encoded, _)) {
+                        let signed_txn = await signTransaction(
+                            lib,
+                            txn_encoded,
+                            chain_id,
+                            caller_principal,
+                            false,
+                        );
+                        switch (signed_txn) {
+                            case (#Err(msg)) {
+                                return #Err(msg);
+                            };
+                            case (#Ok({ signed_txn })) {
+                                return #Ok({
+                                    txn = signed_txn;
+                                });
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    private func nat64ToNat8(value : Nat64) : [Nat8] {
+        return [];
+    };
+
+    private func nat8ToNat64(value : [Nat8]) : Nat64 {
+        return 0;
     };
 };

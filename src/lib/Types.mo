@@ -9,6 +9,10 @@ module {
         signed_txn : [Nat8];
     };
 
+    public type DeployContractResponse = {
+        txn : [Nat8];
+    };
+
     public type UserResponse = {
         address : [Nat8];
         transactions : ?TransactionData;

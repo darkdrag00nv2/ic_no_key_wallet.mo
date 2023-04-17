@@ -10,6 +10,7 @@ actor NoKeyWallet {
   type IcManagement = IcManagement.IcManagement;
   type CreateAddressResponse = Types.CreateAddressResponse;
   type SignTransactionResponse = Types.SignTransactionResponse;
+  type DeployContractResponse = Types.DeployContractResponse;
   type UserResponse = Types.UserResponse;
   type Result<X> = Types.Result<X>;
 
@@ -45,6 +46,24 @@ actor NoKeyWallet {
   /// Clear the transaction history of the caller for the provided chain_id.
   public shared (msg) func clearCallerHistory(chain_id : Nat64) : async Result<()> {
     return await NoKeyWalletLib.clearCallerHistory(lib, chain_id, msg.caller);
+  };
+
+  public shared (msg) func deployEvmContract(
+    bytecode : [Nat8],
+    chain_id : Nat64,
+    max_priority_fee_per_gas : Nat64,
+    gas_limit : Nat64,
+    max_fee_per_gas : Nat64,
+  ) : async Result<DeployContractResponse> {
+    return await NoKeyWalletLib.deployEvmContract(
+      lib,
+      msg.caller,
+      bytecode,
+      chain_id,
+      max_priority_fee_per_gas,
+      gas_limit,
+      max_fee_per_gas,
+    );
   };
 
   public query func healthcheck() : async Bool { true };
