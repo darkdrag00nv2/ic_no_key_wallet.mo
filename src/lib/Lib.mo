@@ -343,6 +343,7 @@ module {
         };
     };
 
+    /// Create a signed EVM contract with the provided parameters.
     public func deployEvmContract(
         lib : NoKeyWalletLib,
         caller_principal : Principal,
@@ -391,7 +392,7 @@ module {
                             txn_encoded,
                             chain_id,
                             caller_principal,
-                            false,
+                            true,
                         );
                         switch (signed_txn) {
                             case (#Err(msg)) {

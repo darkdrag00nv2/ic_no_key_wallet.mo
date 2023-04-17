@@ -48,6 +48,7 @@ actor NoKeyWallet {
     return await NoKeyWalletLib.clearCallerHistory(lib, chain_id, msg.caller);
   };
 
+  /// Create a signed EVM contract with the provided parameters.
   public shared (msg) func deployEvmContract(
     bytecode : [Nat8],
     chain_id : Nat64,
