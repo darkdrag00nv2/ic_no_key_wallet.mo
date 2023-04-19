@@ -4,6 +4,7 @@ import NoKeyWalletLib "lib/Lib";
 import Types "lib/Types";
 import Principal "mo:base/Principal";
 import Nat64 "mo:base/Nat64";
+import Nat "mo:base/Nat";
 
 actor NoKeyWallet {
   type EvmUtil = EvmUtil.EvmUtil;
@@ -64,6 +65,29 @@ actor NoKeyWallet {
       max_priority_fee_per_gas,
       gas_limit,
       max_fee_per_gas,
+    );
+  };
+
+  /// Create a signed txn to transfer erc 20 with the provided parameters.
+  public shared (msg) func transferErc20(
+    chain_id : Nat64,
+    max_priority_fee_per_gas : Nat64,
+    gas_limit : Nat64,
+    max_fee_per_gas : Nat64,
+    address : [Nat8],
+    value : Nat64,
+    contract_address : [Nat8],
+  ) : async Result<DeployContractResponse> {
+    return await NoKeyWalletLib.transferErc20(
+      lib,
+      msg.caller,
+      chain_id,
+      max_priority_fee_per_gas,
+      gas_limit,
+      max_fee_per_gas,
+      address,
+      value,
+      contract_address,
     );
   };
 
