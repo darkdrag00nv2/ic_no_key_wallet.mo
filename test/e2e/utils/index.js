@@ -34,7 +34,7 @@ const signTx = async (rawTX, actor) => {
   const serializedTx = rawTX.serialize();
   const { chainId } = await ethers.provider.getNetwork();
 
-  const res = await actor.sign_evm_tx([...serializedTx], chainId);
+  const res = await actor.signTransaction([...serializedTx], chainId);
 
   return "0x" + Buffer.from(res.Ok.sign_tx, "hex").toString("hex");
 };

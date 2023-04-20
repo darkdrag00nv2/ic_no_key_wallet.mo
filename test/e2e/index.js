@@ -1,7 +1,8 @@
+import { idlFactory } from "./no_key_wallet.did.js";
+
 const { Actor, HttpAgent } = require("@dfinity/agent");
 const { Principal } = require("@dfinity/principal");
 const { createRawTx1559, createRawTx2930, createRawTxLegacy, signTx } = require("./utils");
-const { idleServiceOptions } = require("./utils/idleService");
 const path = require("path");
 const { assert } = require("chai");
 const { ethers } = require("hardhat");
@@ -9,13 +10,38 @@ const fetch = require("node-fetch");
 
 global.fetch = fetch;
 
+export const createActor = (canisterId, options = {}) => {
+  const agent = options.agent || new HttpAgent({ ...options.agentOptions });
+
+  if (options.agent && options.agentOptions) {
+    console.warn(
+      "Detected both agent and agentOptions passed to createActor. Ignoring agentOptions and proceeding with the provided agent."
+    );
+  }
+
+  // Fetch root key for certificate validation during development
+  if (process.env.DFX_NETWORK !== "ic") {
+    agent.fetchRootKey().catch((err) => {
+      console.warn(
+        "Unable to fetch root key. Check to ensure that your local replica is running"
+      );
+      console.error(err);
+    });
+  }
+
+  // Creates an actor with using the candid interface and the HttpAgent
+  return Actor.createActor(idlFactory, {
+    agent,
+    canisterId,
+    ...options.actorOptions,
+  });
+};
+
 describe("Sign EVM Transactions", function () {
   let actor;
   let otherUser;
 
   before(async () => {
-    const idlFactory = ({ IDL }) => IDL.Service(idleServiceOptions(IDL));
-
     const canisters = require(path.resolve(
       "..",
       "..",
@@ -26,21 +52,17 @@ describe("Sign EVM Transactions", function () {
 
     const canisterId = Principal.fromText(canisters.no_key_wallet);
 
-    const agent = new HttpAgent({ host: "http://localhost:8000" });
-    agent.fetchRootKey();
-
-    const createActorOptions = { agent, canisterId };
-    actor = Actor.createActor(idlFactory, createActorOptions);
+    actor = createActor(canisterId);
     const { chainId } = await ethers.provider.getNetwork();
     let address;
-    const [caller] = await actor.get_caller_data(chainId);
+    const [caller] = await actor.getCallerHistory(chainId);
 
     if (!caller) {
-      const res = await actor.create_address();
+      const res = await actor.createAddress();
       address = res.Ok.address;
     } else {
       address = caller.address;
-      await actor.clear_caller_history(chainId);
+      await actor.clearCallerHistory(chainId);
     }
 
     const [owner, user] = await ethers.getSigners();
@@ -91,7 +113,7 @@ describe("Sign EVM Transactions", function () {
 
   it("Sign EIP1559 Transaction", async function () {
     const { chainId } = await ethers.provider.getNetwork();
-    const [caller] = await actor.get_caller_data(chainId);
+    const [caller] = await actor.getCallerHistory(chainId);
     const nonce = Number(caller.transactions.nonce);
     const { maxFeePerGas, maxPriorityFeePerGas } =
       await ethers.provider.getFeeData();
@@ -133,7 +155,7 @@ describe("Sign EVM Transactions", function () {
 
   it("Sign EIP2930 Transaction", async function () {
     const { chainId } = await ethers.provider.getNetwork();
-    const [caller] = await actor.get_caller_data(chainId);
+    const [caller] = await actor.getCallerHistory(chainId);
     const nonce = Number(caller.transactions.nonce);
     const { maxPriorityFeePerGas, gasPrice } =
       await ethers.provider.getFeeData();
@@ -176,7 +198,7 @@ describe("Sign EVM Transactions", function () {
   it("Deploy and used a contract with high level functions from canister", async function () {
     const { chainId } = await ethers.provider.getNetwork();
 
-    const [caller] = await actor.get_caller_data(chainId);
+    const [caller] = await actor.getCallerHistory(chainId);
     const address = caller.address;
 
     const contract = await ethers.getContractFactory("ExampleToken");
@@ -190,7 +212,7 @@ describe("Sign EVM Transactions", function () {
     const { maxFeePerGas, maxPriorityFeePerGas } =
       await ethers.provider.getFeeData();
 
-    const resDeployContract = await actor.deploy_evm_contract(
+    const resDeployContract = await actor.deployEvmContract(
       [...bytecode],
       chainId,
       maxPriorityFeePerGas.toNumber(),
@@ -214,7 +236,7 @@ describe("Sign EVM Transactions", function () {
     assert.ok(balance.eq(ethers.utils.parseUnits("100000", 18)));
 
     const addressOtherUser = await otherUser.getAddress();
-    const resTransferERC20 = await actor.transfer_erc_20(
+    const resTransferERC20 = await actor.transferErc20(
       chainId,
       maxPriorityFeePerGas.toNumber(),
       estimatedGasDeploy.toNumber(),
@@ -238,7 +260,7 @@ describe("Sign EVM Transactions", function () {
   it("Deploy and used a contract", async function () {
     const { chainId } = await ethers.provider.getNetwork();
 
-    const [caller] = await actor.get_caller_data(chainId);
+    const [caller] = await actor.getCallerHistory(chainId);
     const address = caller.address;
 
     const contract = await ethers.getContractFactory("Example");
