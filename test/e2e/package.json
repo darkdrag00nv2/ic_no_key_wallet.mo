@@ -1,0 +1,25 @@
+{
+  "name": "sign-evm-translocation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.0",
+    "ethers": "^5.7.1",
+    "hardhat": "^2.12.0"
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.14.0",
+    "@dfinity/principal": "^0.14.0",
+    "@ethereumjs/tx": "^4.0.0",
+    "@openzeppelin/contracts": "^4.8.0",
+    "node-fetch": "^2.6.6"
+  }
+}

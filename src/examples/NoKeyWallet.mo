@@ -24,7 +24,7 @@ actor NoKeyWallet {
 
   type Env = State.Env;
 
-  let evm_util : EvmUtil = actor ("ubgoy-tiaaa-aaaah-qc7qq-cai");
+  let evm_util : EvmUtil = actor ("rrkah-fqaaa-aaaaa-aaaaq-cai");
   let ic_management : IcManagement = actor ("aaaaa-aa");
   let env : Env = #Local;
   stable let lib = NoKeyWalletLib.init(evm_util, ic_management, env);

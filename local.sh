@@ -21,7 +21,7 @@ else
 fi
 
 # Replace the evm-util id in the actor reference.
-sed -i "s/ubgoy-tiaaa-aaaah-qc7qq-cai/$EVM_UTIL_ID/" src/NoKeyWallet.mo
+sed -i "s/ubgoy-tiaaa-aaaah-qc7qq-cai/$EVM_UTIL_ID/" src/examples/NoKeyWallet.mo
 
 dfx deploy no_key_wallet
 

@@ -20,3 +20,5 @@ dist/
 
 # third-party
 third_party/
+
+**/node_modules
