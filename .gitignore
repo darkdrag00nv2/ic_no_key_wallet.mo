@@ -17,3 +17,6 @@ src/declarations/
 # frontend code
 node_modules/
 dist/
+
+# third-party
+third_party/

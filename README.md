@@ -10,3 +10,34 @@ A stable class exposing wallet funtionalities for EVM based chains.
 - [x] Deploy EVM Transaction
 - [ ] Transfer ERC 20
 - [ ] E2E Tests
+
+### Local Environment
+These are Ubuntu 22.04 instruction but equivalent instruction should also work on other operating systems.
+
+#### Setup
+
+##### Rust
+Apart from the standard Rust installation, you also need to install wasm support.
+
+```bash
+rustup target add wasm32-unknown-unknown
+```
+
+Install `ic-wasm` to optimize the wasm files.
+```
+cargo install ic-wasm
+```
+
+##### Clang
+
+```bash
+sudo apt update
+sudo apt -y install clang
+```
+
+#### Start
+Once the setup is done, you can just use the provided `local.sh` script to deploy the canisters.
+
+```bash
+./local.sh
+```

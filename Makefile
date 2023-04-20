@@ -14,5 +14,8 @@ check-strict: install-dfx-cache
 docs: install-dfx-cache
 	$(shell dfx cache show)/mo-doc
 
+third_party: install-dfx-cache
+	./setup_third_party.sh
+
 test:
 	make -C test

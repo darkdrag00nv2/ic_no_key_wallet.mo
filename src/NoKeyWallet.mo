@@ -15,7 +15,6 @@ actor NoKeyWallet {
   type UserResponse = Types.UserResponse;
   type Result<X> = Types.Result<X>;
 
-  // TODO: https://forum.dfinity.org/t/env-variables-for-motoko-builds/11640/8
   let evm_util : EvmUtil = actor ("ubgoy-tiaaa-aaaah-qc7qq-cai");
   let ic_management : IcManagement = actor ("aaaaa-aa");
   stable let lib = NoKeyWalletLib.init(evm_util, ic_management);

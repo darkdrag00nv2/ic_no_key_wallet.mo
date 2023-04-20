@@ -1,9 +1,24 @@
 {
   "version": 1,
   "canisters": {
+    "evm_util": {
+      "type": "custom",
+      "candid": "third_party/evm_utils/candid/utils.did",
+      "wasm": "third_party/evm_utils/gen/wasm32-unknown-unknown/release/evm_utils_opt.wasm",
+      "build": "bash -c 'test -f third_party/evm_utils/gen/wasm32-unknown-unknown/release/evm_utils_opt.wasm || ./setup_third_party.sh'",
+      "remote": {
+        "candid": "third_party/evm_utils/candid/utils.did",
+        "id": {
+          "ic": "ubgoy-tiaaa-aaaah-qc7qq-cai"
+        }
+      }
+    },
     "no_key_wallet": {
       "type": "motoko",
-      "main": "src/NoKeyWallet.mo"
+      "main": "src/NoKeyWallet.mo",
+      "dependencies": [
+        "evm_util"
+      ]
     }
   },
   "dfx": "0.13.1",
