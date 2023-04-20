@@ -10,13 +10,13 @@ A stable class exposing wallet funtionalities for EVM based chains.
 - [x] Deploy EVM Transaction
 - [ ] Transfer ERC 20
 - [ ] E2E Tests
+- [ ] MOPS Support
 
 ### Local Environment
 These are Ubuntu 22.04 instruction but equivalent instruction should also work on other operating systems.
 
 #### Setup
 
-##### Rust
 Apart from the standard Rust installation, you also need to install wasm support.
 
 ```bash
@@ -28,7 +28,7 @@ Install `ic-wasm` to optimize the wasm files.
 cargo install ic-wasm
 ```
 
-##### Clang
+You'll also need Clang.
 
 ```bash
 sudo apt update

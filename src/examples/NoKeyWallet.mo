@@ -2,14 +2,15 @@
 ///
 /// This also serves as a reference implementation of the usage of the library.
 
-import EvmUtil "lib/EvmUtil";
-import IcManagement "lib/IcManagement";
-import NoKeyWalletLib "lib/Lib";
-import Types "lib/Types";
 import Principal "mo:base/Principal";
 import Nat64 "mo:base/Nat64";
 import Nat "mo:base/Nat";
-import State "lib/State";
+
+import EvmUtil "../lib/EvmUtil";
+import IcManagement "../lib/IcManagement";
+import NoKeyWalletLib "../lib/NoKeyWalletLib";
+import Types "../lib/Types";
+import State "../lib/State";
 
 actor NoKeyWallet {
   type EvmUtil = EvmUtil.EvmUtil;

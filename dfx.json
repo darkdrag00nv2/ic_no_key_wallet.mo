@@ -15,7 +15,7 @@
     },
     "no_key_wallet": {
       "type": "motoko",
-      "main": "src/NoKeyWallet.mo",
+      "main": "src/examples/NoKeyWallet.mo",
       "dependencies": [
         "evm_util"
       ]
