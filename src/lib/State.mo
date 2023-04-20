@@ -11,6 +11,12 @@ module {
 
     let { phash; n64hash } = Map;
 
+    public type Env = {
+        #Local;
+        #Staging;
+        #Production;
+    };
+
     public type TransactionData = {
         data : [Nat8];
         timestamp : Time;
@@ -26,8 +32,15 @@ module {
         var transactions : Map<Nat64, TransactionChainData>;
     };
 
+    public type Config = {
+        env : Env;
+        key_name : Text;
+        sign_cycles : Nat;
+    };
+
     public type State = {
         var users : Map<Principal, UserData>;
+        config : Config;
     };
 
     public func initUserData(pub_key : Blob) : UserData {
@@ -37,8 +50,35 @@ module {
         };
     };
 
-    public func initState() : State {
-        { var users = Map.new<Principal, UserData>(phash) };
+    public func initState(env : Env) : State {
+        let config : Config = switch (env) {
+            case (#Local) {
+                {
+                    env = env;
+                    key_name = "dfx_test_key";
+                    sign_cycles = 0;
+                };
+            };
+            case (#Staging) {
+                {
+                    env = env;
+                    key_name = "test_key_1";
+                    sign_cycles = 10_000_000_000;
+                };
+            };
+            case (#Production) {
+                {
+                    env = env;
+                    key_name = "key_1";
+                    sign_cycles = 26_153_846_153;
+                };
+            };
+        };
+
+        {
+            var users = Map.new<Principal, UserData>(phash);
+            config = config;
+        };
     };
 
     public func getUserData(s : State, p : Principal) : ?UserData {

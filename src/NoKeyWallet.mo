@@ -1,3 +1,7 @@
+/// An actor exposing the NoKeyWallet library functionalities.
+///
+/// This also serves as a reference implementation of the usage of the library.
+
 import EvmUtil "lib/EvmUtil";
 import IcManagement "lib/IcManagement";
 import NoKeyWalletLib "lib/Lib";
@@ -5,19 +9,24 @@ import Types "lib/Types";
 import Principal "mo:base/Principal";
 import Nat64 "mo:base/Nat64";
 import Nat "mo:base/Nat";
+import State "lib/State";
 
 actor NoKeyWallet {
   type EvmUtil = EvmUtil.EvmUtil;
   type IcManagement = IcManagement.IcManagement;
+
   type CreateAddressResponse = Types.CreateAddressResponse;
   type SignTransactionResponse = Types.SignTransactionResponse;
   type DeployContractResponse = Types.DeployContractResponse;
   type UserResponse = Types.UserResponse;
   type Result<X> = Types.Result<X>;
 
+  type Env = State.Env;
+
   let evm_util : EvmUtil = actor ("ubgoy-tiaaa-aaaah-qc7qq-cai");
   let ic_management : IcManagement = actor ("aaaaa-aa");
-  stable let lib = NoKeyWalletLib.init(evm_util, ic_management);
+  let env : Env = #Local;
+  stable let lib = NoKeyWalletLib.init(evm_util, ic_management, env);
 
   /// Create an address/key for the caller principal.
   ///

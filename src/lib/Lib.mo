@@ -30,6 +30,7 @@ module {
     type State = State.State;
     type UserData = State.UserData;
     type TransactionData = State.TransactionData;
+    type Env = State.Env;
 
     type Transaction = EvmUtil.Transaction;
     type Signature = EvmUtil.Signature;
@@ -43,10 +44,14 @@ module {
         state : State;
     };
 
-    public func init(initEvmUtil : EvmUtil, initIcManagement : IcManagement) : NoKeyWalletLib = {
+    public func init(
+        initEvmUtil : EvmUtil,
+        initIcManagement : IcManagement,
+        env : Env,
+    ) : NoKeyWalletLib = {
         evmUtil = initEvmUtil;
         icManagement = initIcManagement;
-        state = State.initState();
+        state = State.initState(env);
     };
 
     /// Create an address for the provided principal.
@@ -57,11 +62,13 @@ module {
         caller_principal : Principal,
     ) : async Result<CreateAddressResponse> {
         try {
-            // TODO: Use key name based on the environment.
             let { public_key } = await lib.icManagement.ecdsa_public_key({
                 canister_id = null;
                 derivation_path = [Principal.toBlob(caller_principal)];
-                key_id = { curve = #secp256k1; name = "dfx_test_key" };
+                key_id = {
+                    curve = #secp256k1;
+                    name = lib.state.config.key_name;
+                };
             });
 
             let address_or_error = await lib.evmUtil.pub_to_address(Blob.toArray(public_key));
@@ -104,14 +111,13 @@ module {
                         };
 
                         try {
-                            // TODO: Use cycle amount and key name based on the environment.
-                            Cycles.add(10_000_000_000);
+                            Cycles.add(lib.state.config.sign_cycles);
                             let { signature } = await lib.icManagement.sign_with_ecdsa({
                                 message_hash = Blob.fromArray(message_hash);
                                 derivation_path = [Principal.toBlob(caller_principal)];
                                 key_id = {
                                     curve = #secp256k1;
-                                    name = "dfx_test_key";
+                                    name = lib.state.config.key_name;
                                 };
                             });
 
