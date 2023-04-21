@@ -17,6 +17,7 @@ import { now } = "mo:base/Time";
 import Map "mo:stable_hash_map/Map/Map";
 import StableBuffer "mo:stable_buffer/StableBuffer";
 import Binary "mo:encoding/Binary";
+import Text "mo:base/Text";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
@@ -36,6 +37,7 @@ module {
     type Transaction = EvmUtil.Transaction;
     type Signature = EvmUtil.Signature;
 
+    type Buffer<X> = Buffer.Buffer<X>;
     type Map<K, V> = Map.Map<K, V>;
     let { n64hash } = Map;
 
@@ -388,6 +390,8 @@ module {
                     nonce = nat64ToNat8(nonce);
                 });
 
+                // TODO: create_transaction does not support encoding signature information.
+                // https://github.com/icopen/evm_utils_ic/issues/3
                 let txn_encoded = await lib.evmUtil.create_transaction(txn);
                 switch (txn_encoded) {
                     case (#Err(msg)) {
@@ -444,49 +448,78 @@ module {
                     };
                 };
 
-                // TODO: encode the data.
-                let data = [];
-
-                let txn : Transaction = #EIP1559({
-                    access_list = [];
-                    chain_id = chain_id;
-                    data = data;
-                    max_fee_per_gas = nat64ToNat8(max_fee_per_gas);
-                    max_priority_fee_per_gas = nat64ToNat8(max_priority_fee_per_gas);
-                    gas_limit = nat64ToNat8(gas_limit);
-                    sign = null;
-                    to = nat64ToNat8(0);
-                    value = nat64ToNat8(0);
-                    nonce = nat64ToNat8(nonce);
-                });
-
-                let txn_encoded = await lib.evmUtil.create_transaction(txn);
-                switch (txn_encoded) {
+                let data = await getTransferData(lib, address, value);
+                switch (data) {
                     case (#Err(msg)) {
                         return #Err(msg);
                     };
-                    case (#Ok(txn_encoded, _)) {
-                        let signed_txn = await signTransaction(
-                            lib,
-                            txn_encoded,
-                            chain_id,
-                            caller_principal,
-                            true,
-                        );
-                        switch (signed_txn) {
+                    case (#Ok(data)) {
+                        let txn : Transaction = #EIP1559({
+                            access_list = [];
+                            chain_id = chain_id;
+                            data = data;
+                            max_fee_per_gas = nat64ToNat8(max_fee_per_gas);
+                            max_priority_fee_per_gas = nat64ToNat8(max_priority_fee_per_gas);
+                            gas_limit = nat64ToNat8(gas_limit);
+                            sign = null;
+                            to = nat64ToNat8(0);
+                            value = nat64ToNat8(0);
+                            nonce = nat64ToNat8(nonce);
+                        });
+
+                        // TODO: create_transaction does not support encoding signature information.
+                        // https://github.com/icopen/evm_utils_ic/issues/3
+                        let txn_encoded = await lib.evmUtil.create_transaction(txn);
+                        switch (txn_encoded) {
                             case (#Err(msg)) {
                                 return #Err(msg);
                             };
-                            case (#Ok({ signed_txn })) {
-                                return #Ok({
-                                    txn = signed_txn;
-                                });
+                            case (#Ok(txn_encoded, _)) {
+                                let signed_txn = await signTransaction(
+                                    lib,
+                                    txn_encoded,
+                                    chain_id,
+                                    caller_principal,
+                                    true,
+                                );
+                                switch (signed_txn) {
+                                    case (#Err(msg)) {
+                                        return #Err(msg);
+                                    };
+                                    case (#Ok({ signed_txn })) {
+                                        return #Ok({
+                                            txn = signed_txn;
+                                        });
+                                    };
+                                };
                             };
                         };
                     };
                 };
             };
         };
+    };
+
+    private func getTransferData(
+        lib : NoKeyWalletLib,
+        address : [Nat8],
+        amount : Nat64,
+    ) : async Result<[Nat8]> {
+        let buf = Buffer.Buffer<Nat8>(0);
+
+        // Encoding of "transfer(address,uint256)".
+        let method_sig = Blob.toArray(Text.encodeUtf8("a9059cbb"));
+        for (element in method_sig.vals()) {
+            buf.add(element);
+        };
+        for (element in address.vals()) {
+            buf.add(element);
+        };
+        for (element in nat64ToNat8(amount).vals()) {
+            buf.add(element);
+        };
+
+        return #Ok(Buffer.toArray(buf));
     };
 
     private func nat64ToNat8(value : Nat64) : [Nat8] {
