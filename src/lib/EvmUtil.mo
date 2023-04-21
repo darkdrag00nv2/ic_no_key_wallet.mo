@@ -1,4 +1,4 @@
-/// The EVM Utility Cannister
+/// The EVM Utility Canister interface.
 ///
 /// Interface copied from https://k7gat-daaaa-aaaae-qaahq-cai.ic0.app/canister/ubgoy-tiaaa-aaaah-qc7qq-cai
 

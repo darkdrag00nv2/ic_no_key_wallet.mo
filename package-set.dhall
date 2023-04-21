@@ -17,6 +17,12 @@ let
         version = "v1.0.0",
         dependencies = [ "base"]
       },
+      { name = "base-0.7.3", repo = "https://github.com/dfinity/motoko-base.git", version = "moc-0.7.4", dependencies = []: List Text },
+      { name = "encoding", 
+        repo = "https://github.com/aviate-labs/encoding.mo",
+        version = "v0.4.1",
+        dependencies = [ "base-0.7.3"]
+      },
     ] : List Package
 
 let

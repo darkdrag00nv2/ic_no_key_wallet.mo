@@ -16,6 +16,7 @@ import Array "mo:base/Array";
 import { now } = "mo:base/Time";
 import Map "mo:stable_hash_map/Map/Map";
 import StableBuffer "mo:stable_buffer/StableBuffer";
+import Binary "mo:encoding/Binary";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
@@ -489,10 +490,10 @@ module {
     };
 
     private func nat64ToNat8(value : Nat64) : [Nat8] {
-        return [];
+        return Binary.BigEndian.fromNat64(value);
     };
 
     private func nat8ToNat64(value : [Nat8]) : Nat64 {
-        return 0;
+        return Binary.BigEndian.toNat64(value);
     };
 };
