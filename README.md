@@ -8,7 +8,7 @@ A stable class exposing wallet funtionalities for EVM based chains.
 - [x] Retrieve History
 - [x] Clear History
 - [x] Deploy EVM Transaction
-- [ ] Transfer ERC 20
+- [x] Transfer ERC 20
 - [ ] E2E Tests
 - [ ] MOPS Support
 
@@ -16,6 +16,16 @@ A stable class exposing wallet funtionalities for EVM based chains.
 These are Ubuntu 22.04 instruction but equivalent instruction should also work on other operating systems.
 
 #### Setup
+
+This library relies on the EVM utility canister. For local development, the provided scripts clone the canister source code and build it. To build the utility canister, you'll need to install the following tools and libraries.
+
+Install Rust using [`rustup`](https://rustup.rs/).
+
+You might have to install `curl`, `gcc`, `make` and `build-essentials` to be able to use `rustup`.
+
+```bash
+sudo apt install -y curl gcc make build-essential
+```
 
 Apart from the standard Rust installation, you also need to install wasm support.
 
@@ -41,3 +51,5 @@ Once the setup is done, you can just use the provided `local.sh` script to deplo
 ```bash
 ./local.sh
 ```
+
+This script will also pull the `evm-utility` canister, build and deploy it. So, it might take a few minutes on the first run.
