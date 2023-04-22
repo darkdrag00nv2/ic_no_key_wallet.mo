@@ -1,6 +1,7 @@
 /// Stable class adding wallet support for EVM based chains.
 ///
-/// TODO: Add more details
+/// Supports creating t-ecdsa key and using it to sign transactions for EVM chains.
+/// Also maintains and exposes the record of keys, nonce and the transactions by the principal.
 import EvmUtil "EvmUtil";
 import Types "Types";
 import Principal "mo:base/Principal";
@@ -48,6 +49,7 @@ module {
         state : State;
     };
 
+    /// Initialize the library by providing it with the required actors and environment.
     public func init(
         initEvmUtil : EvmUtil,
         initIcManagement : IcManagement,
