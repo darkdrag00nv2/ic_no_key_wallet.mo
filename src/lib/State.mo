@@ -1,3 +1,7 @@
+/// State stored by the library.
+///
+/// As a library user, you should rarely have to interact with this module directly.
+
 import Map "mo:stable_hash_map/Map/Map";
 import Principal "mo:base/Principal";
 import Blob "mo:base/Blob";

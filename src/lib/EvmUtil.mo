@@ -1,6 +1,6 @@
 /// The EVM Utility Canister interface.
 ///
-/// Interface copied from https://k7gat-daaaa-aaaae-qaahq-cai.ic0.app/canister/ubgoy-tiaaa-aaaah-qc7qq-cai
+/// Used by the library for performing various evm-related computations.
 
 module {
     public type AccessList = { storage_keys : [[Nat8]]; address : [Nat8] };

@@ -1,3 +1,5 @@
+/// Type declarations for the library.
+
 import State "State";
 
 module {

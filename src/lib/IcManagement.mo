@@ -1,3 +1,7 @@
+/// The IC Management Canister interface used by the library.
+///
+/// Used by the library for creating public keys and signing messages.
+
 module {
     public type IcManagement = actor {
         ecdsa_public_key : ({
