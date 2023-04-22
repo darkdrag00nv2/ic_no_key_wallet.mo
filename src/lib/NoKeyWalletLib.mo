@@ -18,6 +18,7 @@ import Map "mo:stable_hash_map/Map/Map";
 import StableBuffer "mo:stable_buffer/StableBuffer";
 import Binary "mo:encoding/Binary";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
 
 module {
     type EvmUtil = EvmUtil.EvmUtil;
@@ -233,8 +234,26 @@ module {
         sig_bytes : [Nat8],
         public_key_bytes : [Nat8],
     ) : async Result<Nat8> {
+        for (rec_id_val in Iter.range(0, 3)) {
+            let recovery_id = Nat8.fromNat(rec_id_val);
+            let buf = Buffer.Buffer<Nat8>(65);
+            for (val in sig_bytes.vals()) {
+                buf.add(val);
+            };
+            buf.add(recovery_id);
 
-        return #Err("TODO");
+            let recovery_result = await lib.evmUtil.recover_public_key((Buffer.toArray(buf), msg_hash));
+            switch (recovery_result) {
+                case (#Err(msg)) {};
+                case (#Ok(recovered_pk)) {
+                    if (recovered_pk == public_key_bytes) {
+                        return #Ok(recovery_id);
+                    };
+                };
+            };
+        };
+
+        return #Err("Couldn't derive the recovery id from the message, signature and the public key");
     };
 
     private func cloneTransactionWithSignatureInfo(txn : Transaction, sign : Signature) : Transaction {
